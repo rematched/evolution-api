@@ -836,6 +836,9 @@ export class EvolutionStartupService extends ChannelStartupService {
   public async fetchAllGroups() {
     throw new BadRequestException('Method not available on Evolution Channel');
   }
+  public async fetchAllGroupsLite() {
+    throw new BadRequestException('Method not available on Evolution Channel');
+  }
   public async inviteCode() {
     throw new BadRequestException('Method not available on Evolution Channel');
   }

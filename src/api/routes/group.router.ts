@@ -31,6 +31,7 @@ import {
 import { RequestHandler, Router } from 'express';
 
 import { HttpStatus } from './index.router';
+import { InstanceDto } from '@api/dto/instance.dto';
 
 export class GroupRouter extends RouterBroker {
   constructor(...guards: RequestHandler[]) {
@@ -92,6 +93,16 @@ export class GroupRouter extends RouterBroker {
           schema: getParticipantsSchema,
           ClassRef: GetParticipant,
           execute: (instance, data) => groupController.fetchAllGroups(instance, data),
+        });
+
+        res.status(HttpStatus.OK).json(response);
+      })
+      .get(this.routerPath('fetchAllGroupsLite'), ...guards, async (req, res) => {
+        const response = await this.dataValidate<InstanceDto>({
+          request: req,
+          schema: null,
+          ClassRef: InstanceDto,
+          execute: (instance) => groupController.fetchAllGroupsLite(instance),
         });
 
         res.status(HttpStatus.OK).json(response);

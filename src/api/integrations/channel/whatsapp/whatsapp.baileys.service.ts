@@ -4156,6 +4156,24 @@ export class BaileysStartupService extends ChannelStartupService {
     return groups;
   }
 
+  public async fetchAllGroupsLite() {
+    const groups = await this?.client?.groupFetchAllParticipating();
+
+    if (!groups) return [];
+
+    return Object.values(groups).map((group) => ({
+      id: group.id,
+      subject: group.subject,
+      size: group.participants.length,
+      desc: group.desc,
+      restrict: group.restrict,
+      announce: group.announce,
+      isCommunity: group.isCommunity,
+      isCommunityAnnounce: group.isCommunityAnnounce,
+      linkedParent: group.linkedParent,
+    }));
+  }
+
   public async inviteCode(id: GroupJid) {
     try {
       const code = await this.client.groupInviteCode(id.groupJid);

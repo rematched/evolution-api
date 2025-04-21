@@ -1441,6 +1441,9 @@ export class BusinessStartupService extends ChannelStartupService {
   public async fetchAllGroups() {
     throw new BadRequestException('Method not available on WhatsApp Business API');
   }
+  public async fetchAllGroupsLite() {
+    throw new BadRequestException('Method not available on WhatsApp Business API');
+  }
   public async inviteCode() {
     throw new BadRequestException('Method not available on WhatsApp Business API');
   }
