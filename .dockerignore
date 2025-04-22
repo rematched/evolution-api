@@ -22,7 +22,6 @@ yarn-error.log
 # Docker-related
 Dockerfile*
 .dockerignore
-Docker/
 docker-compose*.yaml
 
 # OS / Editor junk

@@ -4166,11 +4166,15 @@ export class BaileysStartupService extends ChannelStartupService {
       subject: group.subject,
       size: group.participants.length,
       desc: group.desc,
+      owner: group.owner,
       restrict: group.restrict,
       announce: group.announce,
       isCommunity: group.isCommunity,
       isCommunityAnnounce: group.isCommunityAnnounce,
       linkedParent: group.linkedParent,
+      admins: group.participants
+        .filter((participant) => participant.admin === 'admin' || participant.admin === 'superadmin')
+        .map((participant) => participant.id),
     }));
   }
 
