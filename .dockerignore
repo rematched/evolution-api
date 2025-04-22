@@ -3,3 +3,37 @@
 *docker-compose*
 node_modules
 dist
+
+# Node modules and logs
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Local env files
+.env
+.env.local
+.env.*.local
+
+# Git
+.git
+.gitignore
+
+# Docker-related
+Dockerfile*
+.dockerignore
+Docker/
+docker-compose*.yaml
+
+# OS / Editor junk
+*.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+*.log
+
+# Build artifacts
+dist
+coverage
+*.tsbuildinfo
