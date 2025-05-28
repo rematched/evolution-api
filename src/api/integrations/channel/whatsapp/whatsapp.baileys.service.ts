@@ -4097,6 +4097,7 @@ export class BaileysStartupService extends ChannelStartupService {
 
       return {
         id: group.id,
+        addressingMode: group.addressingMode,
         subject: group.subject,
         subjectOwner: group.subjectOwner,
         subjectTime: group.subjectTime,
@@ -4104,6 +4105,8 @@ export class BaileysStartupService extends ChannelStartupService {
         size: group.participants.length,
         creation: group.creation,
         owner: group.owner,
+        ownerJid: group.ownerJid,
+        ownerLid: group.ownerLid,
         desc: group.desc,
         descId: group.descId,
         restrict: group.restrict,
@@ -4130,6 +4133,7 @@ export class BaileysStartupService extends ChannelStartupService {
 
       const result = {
         id: group.id,
+        addressingMode: group.addressingMode,
         subject: group.subject,
         subjectOwner: group.subjectOwner,
         subjectTime: group.subjectTime,
@@ -4137,6 +4141,8 @@ export class BaileysStartupService extends ChannelStartupService {
         size: group.participants.length,
         creation: group.creation,
         owner: group.owner,
+        ownerJid: group.ownerJid,
+        ownerLid: group.ownerLid,
         desc: group.desc,
         descId: group.descId,
         restrict: group.restrict,
@@ -4163,10 +4169,13 @@ export class BaileysStartupService extends ChannelStartupService {
 
     return Object.values(groups).map((group) => ({
       id: group.id,
+      addressingMode: group.addressingMode,
       subject: group.subject,
       size: group.participants.length,
       desc: group.desc,
       owner: group.owner,
+      ownerJid: group.ownerJid,
+      ownerLid: group.ownerLid,
       restrict: group.restrict,
       announce: group.announce,
       isCommunity: group.isCommunity,
@@ -4174,7 +4183,7 @@ export class BaileysStartupService extends ChannelStartupService {
       linkedParent: group.linkedParent,
       admins: group.participants
         .filter((participant) => participant.admin === 'admin' || participant.admin === 'superadmin')
-        .map((participant) => participant.id),
+        .map((participant) => participant.jid || participant.id),
     }));
   }
 
