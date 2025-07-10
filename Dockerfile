@@ -1,7 +1,7 @@
 FROM node:20-alpine AS builder
 
 RUN apk update && \
-    apk add git ffmpeg wget curl bash openssl
+    apk add --no-cache git ffmpeg wget curl bash openssl
 
 WORKDIR /evolution
 
