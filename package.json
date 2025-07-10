@@ -123,5 +123,11 @@
     "ts-node-dev": "^2.0.0",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.2"
+  },
+  "overrides": {
+    "baileys": {
+      "jimp": "$jimp",
+      "sharp": "$sharp"
+    }
   }
 }
