@@ -1,5 +1,6 @@
 import { InstanceDto } from '@api/dto/instance.dto';
 import { Options, Quoted, SendAudioDto, SendMediaDto, SendTextDto } from '@api/dto/sendMessage.dto';
+import { ExtendedMessageKey } from '@api/integrations/channel/whatsapp/whatsapp.baileys.service';
 import { ChatwootDto } from '@api/integrations/chatbot/chatwoot/dto/chatwoot.dto';
 import { postgresClient } from '@api/integrations/chatbot/chatwoot/libs/postgres.client';
 import { chatwootImport } from '@api/integrations/chatbot/chatwoot/utils/chatwoot-import-helper';
@@ -26,7 +27,7 @@ import axios from 'axios';
 import { proto } from 'baileys';
 import dayjs from 'dayjs';
 import FormData from 'form-data';
-import Jimp from 'jimp';
+import { Jimp, JimpMime } from 'jimp';
 import Long from 'long';
 import mimeTypes from 'mime-types';
 import path from 'path';
@@ -457,6 +458,24 @@ export class ChatwootService {
     }
   }
 
+  private async mergeContacts(baseId: number, mergeId: number) {
+    try {
+      const contact = await chatwootRequest(this.getClientCwConfig(), {
+        method: 'POST',
+        url: `/api/v1/accounts/${this.provider.accountId}/actions/contact_merge`,
+        body: {
+          base_contact_id: baseId,
+          mergee_contact_id: mergeId,
+        },
+      });
+
+      return contact;
+    } catch {
+      this.logger.error('Error merging contacts');
+      return null;
+    }
+  }
+
   private async mergeBrazilianContacts(contacts: any[]) {
     try {
       const contact = await chatwootRequest(this.getClientCwConfig(), {
@@ -549,24 +568,34 @@ export class ChatwootService {
   }
 
   public async createConversation(instance: InstanceDto, body: any) {
-    const isLid = body.key.remoteJid.includes('@lid') && body.key.senderPn;
-    const remoteJid = isLid ? body.key.senderPn : body.key.remoteJid;
+    const isLid = body.key.previousRemoteJid?.includes('@lid') && body.key.senderPn;
+    const remoteJid = body.key.remoteJid;
     const cacheKey = `${instance.instanceName}:createConversation-${remoteJid}`;
     const lockKey = `${instance.instanceName}:lock:createConversation-${remoteJid}`;
     const maxWaitTime = 5000; // 5 secounds
 
     try {
       // Processa atualização de contatos já criados @lid
-      if (body.key.remoteJid.includes('@lid') && body.key.senderPn && body.key.senderPn !== body.key.remoteJid) {
+      if (isLid && body.key.senderPn !== body.key.previousRemoteJid) {
         const contact = await this.findContact(instance, body.key.remoteJid.split('@')[0]);
         if (contact && contact.identifier !== body.key.senderPn) {
           this.logger.verbose(
-            `Identifier needs update: (contact.identifier: ${contact.identifier}, body.key.remoteJid: ${body.key.remoteJid}, body.key.senderPn: ${body.key.senderPn})`,
+            `Identifier needs update: (contact.identifier: ${contact.identifier}, body.key.remoteJid: ${body.key.remoteJid}, body.key.senderPn: ${body.key.senderPn}`,
           );
-          await this.updateContact(instance, contact.id, {
+          const updateContact = await this.updateContact(instance, contact.id, {
             identifier: body.key.senderPn,
             phone_number: `+${body.key.senderPn.split('@')[0]}`,
           });
+
+          if (updateContact === null) {
+            const baseContact = await this.findContact(instance, body.key.senderPn.split('@')[0]);
+            if (baseContact) {
+              await this.mergeContacts(baseContact.id, contact.id);
+              this.logger.verbose(
+                `Merge contacts: (${baseContact.id}) ${baseContact.phone_number} and (${contact.id}) ${contact.phone_number}`,
+              );
+            }
+          }
         }
       }
       this.logger.verbose(`--- Start createConversation ---`);
@@ -646,7 +675,7 @@ export class ChatwootService {
               instance,
               body.key.participant.split('@')[0],
               filterInbox.id,
-              isGroup,
+              false,
               body.pushName,
               picture_url.profilePictureUrl || null,
               body.key.participant,
@@ -685,7 +714,6 @@ export class ChatwootService {
             }
           }
         } else {
-          const jid = isLid && body?.key?.senderPn ? body.key.senderPn : body.key.remoteJid;
           contact = await this.createContact(
             instance,
             chatId,
@@ -693,7 +721,7 @@ export class ChatwootService {
             isGroup,
             nameContact,
             picture_url.profilePictureUrl || null,
-            jid,
+            remoteJid,
           );
         }
 
@@ -1257,12 +1285,7 @@ export class ChatwootService {
         });
 
         if (message) {
-          const key = message.key as {
-            id: string;
-            remoteJid: string;
-            fromMe: boolean;
-            participant: string;
-          };
+          const key = message.key as ExtendedMessageKey;
 
           await waInstance?.client.sendMessage(key.remoteJid, { delete: key });
 
@@ -1460,12 +1483,7 @@ export class ChatwootService {
             },
           });
           if (lastMessage && !lastMessage.chatwootIsRead) {
-            const key = lastMessage.key as {
-              id: string;
-              fromMe: boolean;
-              remoteJid: string;
-              participant?: string;
-            };
+            const key = lastMessage.key as ExtendedMessageKey;
 
             waInstance?.markMessageAsRead({
               readMessages: [
@@ -1523,33 +1541,24 @@ export class ChatwootService {
     chatwootMessageIds: ChatwootMessage,
     instance: InstanceDto,
   ) {
-    const key = message.key as {
-      id: string;
-      fromMe: boolean;
-      remoteJid: string;
-      participant?: string;
-    };
+    const key = message.key as ExtendedMessageKey;
 
     if (!chatwootMessageIds.messageId || !key?.id) {
       return;
     }
 
-    await this.prismaRepository.message.updateMany({
-      where: {
-        key: {
-          path: ['id'],
-          equals: key.id,
-        },
-        instanceId: instance.instanceId,
-      },
-      data: {
-        chatwootMessageId: chatwootMessageIds.messageId,
-        chatwootConversationId: chatwootMessageIds.conversationId,
-        chatwootInboxId: chatwootMessageIds.inboxId,
-        chatwootContactInboxSourceId: chatwootMessageIds.contactInboxSourceId,
-        chatwootIsRead: chatwootMessageIds.isRead,
-      },
-    });
+    // Use raw SQL to avoid JSON path issues
+    await this.prismaRepository.$executeRaw`
+      UPDATE "Message" 
+      SET 
+        "chatwootMessageId" = ${chatwootMessageIds.messageId},
+        "chatwootConversationId" = ${chatwootMessageIds.conversationId},
+        "chatwootInboxId" = ${chatwootMessageIds.inboxId},
+        "chatwootContactInboxSourceId" = ${chatwootMessageIds.contactInboxSourceId},
+        "chatwootIsRead" = ${chatwootMessageIds.isRead || false}
+      WHERE "instanceId" = ${instance.instanceId} 
+      AND "key"->>'id' = ${key.id}
+    `;
 
     if (this.isImportHistoryAvailable()) {
       chatwootImport.updateMessageSourceID(chatwootMessageIds.messageId, key.id);
@@ -1557,17 +1566,15 @@ export class ChatwootService {
   }
 
   private async getMessageByKeyId(instance: InstanceDto, keyId: string): Promise<MessageModel> {
-    const messages = await this.prismaRepository.message.findFirst({
-      where: {
-        key: {
-          path: ['id'],
-          equals: keyId,
-        },
-        instanceId: instance.instanceId,
-      },
-    });
+    // Use raw SQL query to avoid JSON path issues with Prisma
+    const messages = await this.prismaRepository.$queryRaw`
+      SELECT * FROM "Message" 
+      WHERE "instanceId" = ${instance.instanceId} 
+      AND "key"->>'id' = ${keyId}
+      LIMIT 1
+    `;
 
-    return messages || null;
+    return (messages as MessageModel[])[0] || null;
   }
 
   private async getReplyToIds(
@@ -1602,12 +1609,7 @@ export class ChatwootService {
         },
       });
 
-      const key = message?.key as {
-        id: string;
-        fromMe: boolean;
-        remoteJid: string;
-        participant?: string;
-      };
+      const key = message?.key as ExtendedMessageKey;
 
       if (message && key?.id) {
         return {
@@ -2101,9 +2103,11 @@ export class ChatwootService {
           const fileData = Buffer.from(imgBuffer.data, 'binary');
 
           const img = await Jimp.read(fileData);
-          await img.cover(320, 180);
-
-          const processedBuffer = await img.getBufferAsync(Jimp.MIME_PNG);
+          await img.cover({
+            w: 320,
+            h: 180,
+          });
+          const processedBuffer = await img.getBuffer(JimpMime.png);
 
           const fileStream = new Readable();
           fileStream._read = () => {}; // _read is required but you can noop it
@@ -2235,12 +2239,13 @@ export class ChatwootService {
           body?.editedMessage?.conversation || body?.editedMessage?.extendedTextMessage?.text
         }\n\n_\`${i18next.t('cw.message.edited')}.\`_`;
         const message = await this.getMessageByKeyId(instance, body?.key?.id);
-        const key = message.key as {
-          id: string;
-          fromMe: boolean;
-          remoteJid: string;
-          participant?: string;
-        };
+
+        if (!message) {
+          this.logger.warn('Message not found for edit event');
+          return;
+        }
+
+        const key = message.key as ExtendedMessageKey;
 
         const messageType = key?.fromMe ? 'outgoing' : 'incoming';
 
@@ -2518,7 +2523,7 @@ export class ChatwootService {
       const savedMessages = await this.prismaRepository.message.findMany({
         where: {
           Instance: { name: instance.instanceName },
-          messageTimestamp: { gte: dayjs().subtract(6, 'hours').unix() },
+          messageTimestamp: { gte: Number(dayjs().subtract(6, 'hours').unix()) },
           AND: ids.map((id) => ({ key: { path: ['id'], not: id } })),
         },
       });

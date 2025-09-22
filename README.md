@@ -2,11 +2,14 @@
 
 <div align="center">
 
-[![Docker Image	(https://img.shields.io/badge/Docker-Image-blue)](https://hub.docker.com/r/evoapicloud/evolution-api)]
+[![Docker Image](https://img.shields.io/badge/Docker-image-blue)](https://hub.docker.com/r/evoapicloud/evolution-api)
 [![Whatsapp Group](https://img.shields.io/badge/Group-WhatsApp-%2322BC18)](https://evolution-api.com/whatsapp)
 [![Discord Community](https://img.shields.io/badge/Discord-Community-blue)](https://evolution-api.com/discord)
 [![Postman Collection](https://img.shields.io/badge/Postman-Collection-orange)](https://evolution-api.com/postman) 
 [![Documentation](https://img.shields.io/badge/Documentation-Official-green)](https://doc.evolution-api.com)
+[![Feature Requests](https://img.shields.io/badge/Feature-Requests-purple)](https://evolutionapi.canny.io/feature-requests)
+[![Roadmap](https://img.shields.io/badge/Roadmap-Community-blue)](https://evolutionapi.canny.io/feature-requests)
+[![Changelog](https://img.shields.io/badge/Changelog-Updates-green)](https://evolutionapi.canny.io/changelog)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](./LICENSE)
 [![Support](https://img.shields.io/badge/Donation-picpay-green)](https://app.picpay.com/user/davidsongomes1998)
 [![Sponsors](https://img.shields.io/badge/Github-sponsor-orange)](https://github.com/sponsors/EvolutionAPI)
@@ -67,6 +70,24 @@ Evolution API supports various integrations to enhance its functionality. Below 
 - Amazon S3 / Minio:
   - Store media files received in [Amazon S3](https://aws.amazon.com/pt/s3/) or [Minio](https://min.io/).
 
+## Community & Feedback
+
+We value community input and feedback to continuously improve Evolution API:
+
+### 🚀 Feature Requests & Roadmap
+- **[Feature Requests](https://evolutionapi.canny.io/feature-requests)**: Submit new feature ideas and vote on community proposals
+- **[Roadmap](https://evolutionapi.canny.io/feature-requests)**: View planned features and development progress
+- **[Changelog](https://evolutionapi.canny.io/changelog)**: Stay updated with the latest releases and improvements
+
+### 💬 Community Support
+- **[WhatsApp Group](https://evolution-api.com/whatsapp)**: Join our community for support and discussions
+- **[Discord Community](https://evolution-api.com/discord)**: Real-time chat with developers and users
+- **[GitHub Issues](https://github.com/EvolutionAPI/evolution-api/issues)**: Report bugs and technical issues
+
+### 🔒 Security
+- **[Security Policy](./SECURITY.md)**: Guidelines for reporting security vulnerabilities
+- **Security Contact**: contato@evolution-api.com
+
 ## Telemetry Notice
 
 To continuously improve our services, we have implemented telemetry that collects data on the routes used, the most accessed routes, and the version of the API in use. We would like to assure you that no sensitive or personal data is collected during this process. The telemetry helps us identify improvements and provide a better experience for users.
@@ -117,4 +138,4 @@ Please contact contato@evolution-api.com to inquire about licensing matters.
 
 Apart from the specific conditions mentioned above, all other rights and restrictions follow the Apache License 2.0. Detailed information about the Apache License 2.0 can be found at [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0).
 
-© 2024 Evolution API
+© 2025 Evolution API
