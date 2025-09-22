@@ -13,6 +13,7 @@ import {
   GroupUpdateParticipantDto,
   GroupUpdateSettingDto,
 } from '@api/dto/group.dto';
+import { InstanceDto } from '@api/dto/instance.dto';
 import { groupController } from '@api/server.module';
 import {
   AcceptGroupInviteSchema,
@@ -31,7 +32,6 @@ import {
 import { RequestHandler, Router } from 'express';
 
 import { HttpStatus } from './index.router';
-import { InstanceDto } from '@api/dto/instance.dto';
 
 export class GroupRouter extends RouterBroker {
   constructor(...guards: RequestHandler[]) {
